@@ -1,0 +1,614 @@
+// app/index.tsx — исправленная версия
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Image,
+  StyleSheet,
+  Dimensions,
+  StatusBar,
+  Modal,
+  TouchableWithoutFeedback,
+  ScrollView,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { router } from "expo-router";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
+
+import { BossHealthBar } from "../src/components/BossHealthBar";
+import { XPBar } from "../src/components/XPBar";
+import { WeaponIntegrity } from "../src/components/WeaponIntegrity";
+import { DamageNumber } from "../src/components/DamageNumber";
+import { useGameState } from "../src/hooks/useGameState";
+import { GAME_CONFIG } from "../src/utils/constants";
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } =
+  Dimensions.get("window");
+
+export default function GameScreen() {
+  const {
+    bossHp,
+    maxBossHp,
+    playerDamage,
+    playerLevel,
+    playerXp,
+    weaponIntegrity,
+    gold,
+    handleHit,
+  } = useGameState();
+
+  const [showShop, setShowShop] = useState(false);
+  const [showClan, setShowClan] = useState(false);
+  const [showWeapons, setShowWeapons] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [lastDamage, setLastDamage] = useState<{
+    value: number;
+    x: number;
+    y: number;
+  } | null>(null);
+  const [isBossDead, setIsBossDead] = useState(false);
+
+  // Анимации
+  const bossShake = useSharedValue(0);
+  const bossScale = useSharedValue(1);
+  const bossGlow = useSharedValue(0);
+
+  const onBossHit = async (event: any) => {
+    if (isBossDead) return;
+
+    const { locationX, locationY } = event.nativeEvent;
+    const damage = calculateDamage();
+
+    setLastDamage({ value: damage, x: locationX, y: locationY });
+    setTimeout(() => setLastDamage(null), 500);
+
+    bossShake.value = withSequence(
+      withTiming(-10, { duration: 40 }),
+      withTiming(8, { duration: 40 }),
+      withTiming(-5, { duration: 40 }),
+      withTiming(5, { duration: 40 }),
+      withTiming(0, { duration: 40 }),
+    );
+
+    bossScale.value = withSequence(
+      withTiming(0.95, { duration: 60 }),
+      withTiming(1, { duration: 60 }),
+    );
+    bossGlow.value = withSequence(
+      withTiming(1, { duration: 50 }),
+      withTiming(0, { duration: 200 }),
+    );
+
+    const result = await handleHit("user_123");
+
+    if (result.isBossDead) {
+      setIsBossDead(true);
+      bossShake.value = withSequence(
+        withTiming(0, { duration: 0 }),
+        withTiming(-20, { duration: 100 }),
+        withTiming(20, { duration: 100 }),
+        withTiming(0, { duration: 100 }),
+      );
+      setTimeout(() => {
+        setIsBossDead(false);
+      }, 2000);
+    }
+  };
+
+  const calculateDamage = () => {
+    let damage = GAME_CONFIG.BASE_DAMAGE + (playerLevel - 1) * 10;
+    damage *= weaponIntegrity / 100;
+
+    const isCritical = Math.random() < GAME_CONFIG.CRITICAL_CHANCE;
+    if (isCritical) {
+      damage *= GAME_CONFIG.CRITICAL_MULTIPLIER;
+    }
+
+    return Math.floor(damage);
+  };
+
+  const bossAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: bossShake.value },
+      { scale: bossScale.value },
+    ],
+  }));
+
+  const bossGlowStyle = useAnimatedStyle(() => ({
+    shadowOpacity: bossGlow.value * 0.8,
+    shadowRadius: bossGlow.value * 20,
+    shadowColor: "#ff4444",
+  }));
+
+  const currentDamage =
+    GAME_CONFIG.BASE_DAMAGE + (playerLevel - 1) * 10;
+  const finalDamage = Math.floor(
+    currentDamage * (weaponIntegrity / 100),
+  );
+
+  // Компонент модального окна с отступом под левые кнопки
+  const ModalWithPadding = ({
+    visible,
+    onClose,
+    title,
+    children,
+  }: any) => (
+    <Modal visible={visible} animationType="slide" transparent>
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContent}>
+          <Text style={styles.modalTitle}>{title}</Text>
+          <TouchableOpacity
+            style={styles.modalClose}
+            onPress={onClose}
+          >
+            <Ionicons name="close" size={24} color="#fff" />
+          </TouchableOpacity>
+          <ScrollView
+            style={styles.modalScroll}
+            contentContainerStyle={styles.modalScrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {children}
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
+  );
+
+  return (
+    <LinearGradient
+      colors={["#1a1a2e", "#16213e"]}
+      style={styles.container}
+    >
+      <StatusBar barStyle="light-content" />
+
+      {/* ===== ВЕРХНЯЯ ПАНЕЛЬ ===== */}
+      <SafeAreaView style={styles.topBar}>
+        <TouchableOpacity
+          style={styles.iconButton}
+          onPress={() => router.back()}
+        >
+          <Ionicons name="close" size={28} color="#fff" />
+        </TouchableOpacity>
+
+        <BossHealthBar currentHp={bossHp} maxHp={maxBossHp} />
+
+        <TouchableOpacity
+          style={styles.iconButton}
+          onPress={() => setShowMenu(true)}
+        >
+          <Ionicons name="menu" size={28} color="#fff" />
+        </TouchableOpacity>
+      </SafeAreaView>
+
+      {/* ===== ЛЕВАЯ ПАНЕЛЬ (кнопки) ===== */}
+      <View style={styles.mainContent}>
+        <View style={styles.leftPanel}>
+          <TouchableOpacity
+            style={styles.sideButton}
+            onPress={() => setShowShop(true)}
+          >
+            <Ionicons name="storefront" size={28} color="#ffd700" />
+            <Text style={styles.sideButtonText}>Магазин</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.sideButton}
+            onPress={() => setShowClan(true)}
+          >
+            <Ionicons name="people" size={28} color="#ffd700" />
+            <Text style={styles.sideButtonText}>Клан</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.sideButton}
+            onPress={() => setShowWeapons(true)}
+          >
+            <Ionicons name="hammer" size={28} color="#ffd700" />
+            <Text style={styles.sideButtonText}>Оружие</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* ===== ЦЕНТР — БОСС ===== */}
+        <TouchableWithoutFeedback onPress={onBossHit}>
+          <Animated.View
+            style={[
+              styles.bossContainer,
+              bossAnimatedStyle,
+              bossGlowStyle,
+            ]}
+          >
+            <Image
+              source={require("../assets/images/boss.jpg")}
+              style={[
+                styles.bossImage,
+                isBossDead && styles.bossDead,
+              ]}
+              resizeMode="contain"
+              accessibilityLabel="Босс игры — нажми для удара"
+            />
+            <Text style={styles.bossName}>
+              <MaterialIcons name="girl" size={16} color="black" />
+              Бузова
+              <MaterialIcons name="girl" size={16} color="black" />
+            </Text>
+
+            {lastDamage && (
+              <DamageNumber
+                value={lastDamage.value}
+                x={lastDamage.x}
+                y={lastDamage.y}
+              />
+            )}
+
+            {lastDamage &&
+              lastDamage.value > GAME_CONFIG.BASE_DAMAGE * 1.5 && (
+                <View style={styles.criticalIndicator}>
+                  <Text style={styles.criticalText}>🔥 КРИТ! 🔥</Text>
+                </View>
+              )}
+          </Animated.View>
+        </TouchableWithoutFeedback>
+      </View>
+
+      {/* ===== НИЖНЯЯ ПАНЕЛЬ ===== */}
+      <SafeAreaView
+        style={styles.bottomSection}
+        edges={["bottom", "left", "right"]}
+      >
+        {/* XP и целостность оружия */}
+        <View style={styles.bottomPanel}>
+          <View style={styles.bottomLeft}>
+            <XPBar
+              currentXp={playerXp}
+              maxXp={GAME_CONFIG.XP_PER_LEVEL}
+              level={playerLevel}
+            />
+          </View>
+          <View style={styles.bottomRight}>
+            <WeaponIntegrity integrity={weaponIntegrity} />
+          </View>
+        </View>
+
+        {/* Статистика и подсказка */}
+        <View style={styles.statsBar}>
+          <View style={styles.statItem}>
+            <Ionicons name="cash" size={20} color="#ffd700" />
+            <Text style={styles.statText}>{Math.floor(gold)}</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Ionicons name="flash" size={20} color="#ff4444" />
+            <Text style={styles.statText}>{playerDamage}</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Ionicons name="trending-up" size={20} color="#44ff44" />
+            <Text style={styles.statText}>~{finalDamage}</Text>
+          </View>
+        </View>
+
+        <Text style={styles.hint}>
+          👆 Нажми на босса, чтобы ударить!
+        </Text>
+      </SafeAreaView>
+
+      {/* ===== МОДАЛЬНЫЕ ОКНА С ОТСТУПОМ ===== */}
+
+      {/* Магазин */}
+      <ModalWithPadding
+        visible={showShop}
+        onClose={() => setShowShop(false)}
+        title="🛒 Магазин"
+      >
+        <Text style={styles.modalText}>
+          💊 Зелье восстановления оружия — 100 золота
+        </Text>
+        <Text style={styles.modalText}>
+          ⚡ Усиление урона +10 — 500 золота
+        </Text>
+        <Text style={styles.modalText}>
+          ⭐ Критический шанс +5% — 1000 золота
+        </Text>
+        <Text style={styles.modalText}>
+          🔨 Новое оружие — 2000 золота
+        </Text>
+      </ModalWithPadding>
+
+      {/* Клан */}
+      <ModalWithPadding
+        visible={showClan}
+        onClose={() => setShowClan(false)}
+        title="⚔️ Клан"
+      >
+        <Text style={styles.modalText}>🏠 Вы ещё не в клане</Text>
+        <Text style={styles.modalText}>
+          Создайте или вступите в клан для бонусов!
+        </Text>
+        <View style={styles.clanBonus}>
+          <Text style={styles.clanBonusText}>
+            ✨ Бонус клана: +15% к урону
+          </Text>
+        </View>
+        <TouchableOpacity style={styles.createClanButton}>
+          <Text style={styles.createClanButtonText}>
+            ➕ Создать клан
+          </Text>
+        </TouchableOpacity>
+      </ModalWithPadding>
+
+      {/* Оружие */}
+      <ModalWithPadding
+        visible={showWeapons}
+        onClose={() => setShowWeapons(false)}
+        title="🗡️ Оружие"
+      >
+        <View style={styles.weaponSlot}>
+          <Ionicons name="hammer" size={40} color="#ffd700" />
+          <Text style={styles.weaponName}>Ржавый меч</Text>
+          <Text style={styles.weaponStat}>
+            ⚔️ Урон: {currentDamage}
+          </Text>
+          <Text style={styles.weaponStat}>
+            🔧 Целостность: {weaponIntegrity.toFixed(0)}%
+          </Text>
+        </View>
+        <TouchableOpacity style={styles.repairButton}>
+          <Text style={styles.repairButtonText}>
+            Починить за 50 золота
+          </Text>
+        </TouchableOpacity>
+      </ModalWithPadding>
+
+      {/* Бургер-меню */}
+      <ModalWithPadding
+        visible={showMenu}
+        onClose={() => setShowMenu(false)}
+        title="☰ Меню"
+      >
+        <TouchableOpacity style={styles.menuItem}>
+          <Text style={styles.menuItemText}>🏆 Рейтинг</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.menuItem}>
+          <Text style={styles.menuItemText}>📊 Статистика</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.menuItem}>
+          <Text style={styles.menuItemText}>⚙️ Настройки</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.menuItem}>
+          <Text style={styles.menuItemText}>❓ Помощь</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.menuItem}>
+          <Text style={styles.menuItemText}>
+            🚪 Выйти из аккаунта
+          </Text>
+        </TouchableOpacity>
+      </ModalWithPadding>
+    </LinearGradient>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  topBar: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: "transparent",
+  },
+  iconButton: {
+    padding: 8,
+    backgroundColor: "rgba(0,0,0,0.3)",
+    borderRadius: 30,
+  },
+  mainContent: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  leftPanel: {
+    position: "absolute",
+    left: 12,
+    top: "40%",
+    gap: 16,
+    zIndex: 10,
+  },
+  sideButton: {
+    backgroundColor: "rgba(0,0,0,0.7)",
+    padding: 10,
+    borderRadius: 25,
+    alignItems: "center",
+    width: 65,
+    borderWidth: 1,
+    borderColor: "#ffd700",
+  },
+  sideButtonText: {
+    color: "#ffd700",
+    fontSize: 10,
+    marginTop: 4,
+  },
+  bossContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 20,
+  },
+  bossImage: {
+    width: SCREEN_WIDTH * 0.75,
+    height: SCREEN_HEIGHT * 0.35,
+  },
+  bossDead: {
+    opacity: 0.5,
+    tintColor: "#ff0000",
+  },
+  bossName: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
+    marginTop: 8,
+    textShadowColor: "#000",
+    textShadowOffset: { width: 1, height: 1 },
+  },
+  bottomSection: {
+    backgroundColor: "transparent",
+  },
+  bottomPanel: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+  },
+  bottomLeft: {
+    flex: 1,
+    alignItems: "flex-start",
+  },
+  bottomRight: {
+    flex: 1,
+    alignItems: "flex-end",
+  },
+  statsBar: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    marginHorizontal: 20,
+    borderRadius: 30,
+    marginBottom: 8,
+  },
+  statItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  statText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+  hint: {
+    textAlign: "center",
+    color: "#aaa",
+    fontSize: 12,
+    paddingBottom: 12,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.85)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    backgroundColor: "#1a1a2e",
+    borderRadius: 20,
+    padding: 24,
+    width: SCREEN_WIDTH * 0.85,
+    maxHeight: SCREEN_HEIGHT * 0.7,
+    borderWidth: 1,
+    borderColor: "#ffd700",
+    marginLeft: 50,
+  },
+  modalScroll: {
+    maxHeight: SCREEN_HEIGHT * 0.5,
+  },
+  modalScrollContent: {
+    paddingBottom: 20,
+  },
+  modalTitle: {
+    color: "#ffd700",
+    fontSize: 24,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  modalClose: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+    padding: 8,
+    zIndex: 1,
+  },
+  modalText: {
+    color: "#fff",
+    fontSize: 14,
+    marginVertical: 8,
+  },
+  menuItem: {
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#333",
+  },
+  menuItemText: {
+    color: "#fff",
+    fontSize: 18,
+  },
+  clanBonus: {
+    marginTop: 16,
+    padding: 12,
+    backgroundColor: "rgba(255,215,0,0.2)",
+    borderRadius: 10,
+  },
+  clanBonusText: {
+    color: "#ffd700",
+    textAlign: "center",
+  },
+  createClanButton: {
+    backgroundColor: "#4a4a8a",
+    padding: 12,
+    borderRadius: 25,
+    alignItems: "center",
+    marginTop: 16,
+  },
+  createClanButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+  weaponSlot: {
+    alignItems: "center",
+    marginVertical: 16,
+  },
+  weaponName: {
+    color: "#ffd700",
+    fontSize: 20,
+    fontWeight: "bold",
+    marginTop: 8,
+  },
+  weaponStat: {
+    color: "#fff",
+    fontSize: 14,
+    marginTop: 4,
+  },
+  repairButton: {
+    backgroundColor: "#ffd700",
+    padding: 12,
+    borderRadius: 25,
+    alignItems: "center",
+    marginTop: 16,
+  },
+  repairButtonText: {
+    color: "#1a1a2e",
+    fontWeight: "bold",
+  },
+  criticalIndicator: {
+    position: "absolute",
+    top: -30,
+    alignSelf: "center",
+  },
+  criticalText: {
+    color: "#ffaa00",
+    fontSize: 24,
+    fontWeight: "bold",
+    textShadowColor: "#000",
+    textShadowOffset: { width: 2, height: 2 },
+  },
+});
