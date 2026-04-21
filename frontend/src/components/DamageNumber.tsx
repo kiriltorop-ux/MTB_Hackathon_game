@@ -1,3 +1,4 @@
+// src/components/DamageNumber.tsx
 import React, { useEffect, useRef } from "react";
 import { Animated, StyleSheet } from "react-native";
 
@@ -5,12 +6,14 @@ interface DamageNumberProps {
   value: number;
   x: number;
   y: number;
+  isCritical?: boolean;
 }
 
 export const DamageNumber: React.FC<DamageNumberProps> = ({
   value,
   x,
   y,
+  isCritical = false,
 }) => {
   const opacity = useRef(new Animated.Value(1)).current;
   const translateY = useRef(new Animated.Value(0)).current;
@@ -30,8 +33,6 @@ export const DamageNumber: React.FC<DamageNumberProps> = ({
     ]).start();
   }, []);
 
-  const isCritical = value > 150;
-
   return (
     <Animated.Text
       style={[
@@ -43,11 +44,12 @@ export const DamageNumber: React.FC<DamageNumberProps> = ({
           transform: [{ translateY }],
           fontSize: isCritical ? 28 : 20,
           color: isCritical ? "#ffaa00" : "#ff4444",
-          fontWeight: isCritical ? "bold" : "normal",
+          fontWeight: isCritical ? "bold" : "600",
         },
       ]}
     >
-      -{value}!
+      -{value}
+      {isCritical ? "!" : ""}
     </Animated.Text>
   );
 };

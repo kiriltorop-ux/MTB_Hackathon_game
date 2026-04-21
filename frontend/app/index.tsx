@@ -1,4 +1,3 @@
-// app/index.tsx — исправленная версия
 import React, { useState } from "react";
 import {
   View,
@@ -11,6 +10,7 @@ import {
   Modal,
   TouchableWithoutFeedback,
   ScrollView,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -27,34 +27,33 @@ import { BossHealthBar } from "../src/components/BossHealthBar";
 import { XPBar } from "../src/components/XPBar";
 import { WeaponIntegrity } from "../src/components/WeaponIntegrity";
 import { DamageNumber } from "../src/components/DamageNumber";
-import { useGameState } from "../src/hooks/useGameState";
-import { GAME_CONFIG } from "../src/utils/constants";
+import { useUser } from "../src/hooks/useUser";
+import { useBoss } from "../src/hooks/useBoss";
+import { CLIENT_CONFIG } from "../src/utils/constants";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } =
   Dimensions.get("window");
 
 export default function GameScreen() {
+  const telegramId = 123456789;
+
   const {
-    bossHp,
-    maxBossHp,
-    playerDamage,
-    playerLevel,
-    playerXp,
-    weaponIntegrity,
-    gold,
-    handleHit,
-  } = useGameState();
+    user,
+    loading: userLoading,
+    refreshUser,
+  } = useUser(telegramId);
+  const {
+    boss,
+    loading: bossLoading,
+    hit,
+    lastDamage,
+    isHitting,
+  } = useBoss(telegramId);
 
   const [showShop, setShowShop] = useState(false);
   const [showClan, setShowClan] = useState(false);
   const [showWeapons, setShowWeapons] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
-  const [lastDamage, setLastDamage] = useState<{
-    value: number;
-    x: number;
-    y: number;
-  } | null>(null);
-  const [isBossDead, setIsBossDead] = useState(false);
 
   // Анимации
   const bossShake = useSharedValue(0);
@@ -62,57 +61,50 @@ export default function GameScreen() {
   const bossGlow = useSharedValue(0);
 
   const onBossHit = async (event: any) => {
-    if (isBossDead) return;
+    if (bossLoading || isHitting) return;
 
     const { locationX, locationY } = event.nativeEvent;
-    const damage = calculateDamage();
 
-    setLastDamage({ value: damage, x: locationX, y: locationY });
-    setTimeout(() => setLastDamage(null), 500);
-
+    // Анимация босса
     bossShake.value = withSequence(
-      withTiming(-10, { duration: 40 }),
-      withTiming(8, { duration: 40 }),
-      withTiming(-5, { duration: 40 }),
-      withTiming(5, { duration: 40 }),
-      withTiming(0, { duration: 40 }),
+      withTiming(-10, {
+        duration: CLIENT_CONFIG.ANIMATION.HIT_SHAKE_DURATION,
+      }),
+      withTiming(8, {
+        duration: CLIENT_CONFIG.ANIMATION.HIT_SHAKE_DURATION,
+      }),
+      withTiming(-5, {
+        duration: CLIENT_CONFIG.ANIMATION.HIT_SHAKE_DURATION,
+      }),
+      withTiming(5, {
+        duration: CLIENT_CONFIG.ANIMATION.HIT_SHAKE_DURATION,
+      }),
+      withTiming(0, {
+        duration: CLIENT_CONFIG.ANIMATION.HIT_SHAKE_DURATION,
+      }),
     );
 
     bossScale.value = withSequence(
-      withTiming(0.95, { duration: 60 }),
-      withTiming(1, { duration: 60 }),
+      withTiming(0.95, {
+        duration: CLIENT_CONFIG.ANIMATION.HIT_SCALE_DURATION,
+      }),
+      withTiming(1, {
+        duration: CLIENT_CONFIG.ANIMATION.HIT_SCALE_DURATION,
+      }),
     );
+
     bossGlow.value = withSequence(
-      withTiming(1, { duration: 50 }),
+      withTiming(1, {
+        duration: CLIENT_CONFIG.ANIMATION.GLOW_DURATION,
+      }),
       withTiming(0, { duration: 200 }),
     );
 
-    const result = await handleHit("user_123");
+    const result = await hit(locationX, locationY);
 
-    if (result.isBossDead) {
-      setIsBossDead(true);
-      bossShake.value = withSequence(
-        withTiming(0, { duration: 0 }),
-        withTiming(-20, { duration: 100 }),
-        withTiming(20, { duration: 100 }),
-        withTiming(0, { duration: 100 }),
-      );
-      setTimeout(() => {
-        setIsBossDead(false);
-      }, 2000);
+    if (result?.success) {
+      refreshUser();
     }
-  };
-
-  const calculateDamage = () => {
-    let damage = GAME_CONFIG.BASE_DAMAGE + (playerLevel - 1) * 10;
-    damage *= weaponIntegrity / 100;
-
-    const isCritical = Math.random() < GAME_CONFIG.CRITICAL_CHANCE;
-    if (isCritical) {
-      damage *= GAME_CONFIG.CRITICAL_MULTIPLIER;
-    }
-
-    return Math.floor(damage);
   };
 
   const bossAnimatedStyle = useAnimatedStyle(() => ({
@@ -128,13 +120,6 @@ export default function GameScreen() {
     shadowColor: "#ff4444",
   }));
 
-  const currentDamage =
-    GAME_CONFIG.BASE_DAMAGE + (playerLevel - 1) * 10;
-  const finalDamage = Math.floor(
-    currentDamage * (weaponIntegrity / 100),
-  );
-
-  // Компонент модального окна с отступом под левые кнопки
   const ModalWithPadding = ({
     visible,
     onClose,
@@ -163,6 +148,20 @@ export default function GameScreen() {
     </Modal>
   );
 
+  if (userLoading || bossLoading) {
+    return (
+      <LinearGradient
+        colors={["#1a1a2e", "#16213e"]}
+        style={styles.centerContainer}
+      >
+        <ActivityIndicator size="large" color="#ffd700" />
+        <Text style={{ color: "#fff", marginTop: 16 }}>
+          Загрузка...
+        </Text>
+      </LinearGradient>
+    );
+  }
+
   return (
     <LinearGradient
       colors={["#1a1a2e", "#16213e"]}
@@ -171,7 +170,10 @@ export default function GameScreen() {
       <StatusBar barStyle="light-content" />
 
       {/* ===== ВЕРХНЯЯ ПАНЕЛЬ ===== */}
-      <SafeAreaView style={styles.topBar}>
+      <SafeAreaView
+        style={styles.topBar}
+        edges={["top", "left", "right"]}
+      >
         <TouchableOpacity
           style={styles.iconButton}
           onPress={() => router.back()}
@@ -179,7 +181,10 @@ export default function GameScreen() {
           <Ionicons name="close" size={28} color="#fff" />
         </TouchableOpacity>
 
-        <BossHealthBar currentHp={bossHp} maxHp={maxBossHp} />
+        <BossHealthBar
+          currentHp={boss?.currentHp ?? 0}
+          maxHp={boss?.maxHp ?? 10000}
+        />
 
         <TouchableOpacity
           style={styles.iconButton}
@@ -189,8 +194,9 @@ export default function GameScreen() {
         </TouchableOpacity>
       </SafeAreaView>
 
-      {/* ===== ЛЕВАЯ ПАНЕЛЬ (кнопки) ===== */}
+      {/* ===== РАСТЯГИВАЮЩИЙСЯ КОНТЕЙНЕР ===== */}
       <View style={styles.mainContent}>
+        {/* Левая панель */}
         <View style={styles.leftPanel}>
           <TouchableOpacity
             style={styles.sideButton}
@@ -217,7 +223,7 @@ export default function GameScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* ===== ЦЕНТР — БОСС ===== */}
+        {/* Босс */}
         <TouchableWithoutFeedback onPress={onBossHit}>
           <Animated.View
             style={[
@@ -227,18 +233,15 @@ export default function GameScreen() {
             ]}
           >
             <Image
-              source={require("../assets/images/boss.jpg")}
-              style={[
-                styles.bossImage,
-                isBossDead && styles.bossDead,
-              ]}
+              source={CLIENT_CONFIG.UI.DEFAULT_BOSS_IMAGE}
+              style={styles.bossImage}
               resizeMode="contain"
               accessibilityLabel="Босс игры — нажми для удара"
             />
             <Text style={styles.bossName}>
-              <MaterialIcons name="girl" size={16} color="black" />
-              Бузова
-              <MaterialIcons name="girl" size={16} color="black" />
+              <MaterialIcons name="girl" size={16} color="#fff" />
+              {boss?.name ?? "Босс"}
+              <MaterialIcons name="girl" size={16} color="#fff" />
             </Text>
 
             {lastDamage && (
@@ -246,15 +249,9 @@ export default function GameScreen() {
                 value={lastDamage.value}
                 x={lastDamage.x}
                 y={lastDamage.y}
+                isCritical={lastDamage.isCritical}
               />
             )}
-
-            {lastDamage &&
-              lastDamage.value > GAME_CONFIG.BASE_DAMAGE * 1.5 && (
-                <View style={styles.criticalIndicator}>
-                  <Text style={styles.criticalText}>🔥 КРИТ! 🔥</Text>
-                </View>
-              )}
           </Animated.View>
         </TouchableWithoutFeedback>
       </View>
@@ -264,33 +261,36 @@ export default function GameScreen() {
         style={styles.bottomSection}
         edges={["bottom", "left", "right"]}
       >
-        {/* XP и целостность оружия */}
         <View style={styles.bottomPanel}>
           <View style={styles.bottomLeft}>
             <XPBar
-              currentXp={playerXp}
-              maxXp={GAME_CONFIG.XP_PER_LEVEL}
-              level={playerLevel}
+              currentXp={user?.experience ?? 0}
+              maxXp={100} // TODO: уточните у бэка максимальный XP для уровня
+              level={user?.level ?? 1}
             />
           </View>
           <View style={styles.bottomRight}>
-            <WeaponIntegrity integrity={weaponIntegrity} />
+            <WeaponIntegrity integrity={100} />{" "}
+            {/* TODO: добавить в API */}
           </View>
         </View>
 
-        {/* Статистика и подсказка */}
         <View style={styles.statsBar}>
           <View style={styles.statItem}>
             <Ionicons name="cash" size={20} color="#ffd700" />
-            <Text style={styles.statText}>{Math.floor(gold)}</Text>
+            <Text style={styles.statText}>{user?.gold ?? 0}</Text>
           </View>
           <View style={styles.statItem}>
             <Ionicons name="flash" size={20} color="#ff4444" />
-            <Text style={styles.statText}>{playerDamage}</Text>
+            <Text style={styles.statText}>
+              {user?.total_damage ?? 0}
+            </Text>
           </View>
           <View style={styles.statItem}>
-            <Ionicons name="trending-up" size={20} color="#44ff44" />
-            <Text style={styles.statText}>~{finalDamage}</Text>
+            <Ionicons name="star" size={20} color="#44ff44" />
+            <Text style={styles.statText}>
+              Ур. {user?.level ?? 1}
+            </Text>
           </View>
         </View>
 
@@ -347,21 +347,16 @@ export default function GameScreen() {
       <ModalWithPadding
         visible={showWeapons}
         onClose={() => setShowWeapons(false)}
-        title="🗡️ Оружие"
+        title="⚡ Энергия"
       >
         <View style={styles.weaponSlot}>
           <Ionicons name="hammer" size={40} color="#ffd700" />
           <Text style={styles.weaponName}>Ржавый меч</Text>
-          <Text style={styles.weaponStat}>
-            ⚔️ Урон: {currentDamage}
-          </Text>
-          <Text style={styles.weaponStat}>
-            🔧 Целостность: {weaponIntegrity.toFixed(0)}%
-          </Text>
+          <Text style={styles.weaponStat}>Энергии не осталось;(</Text>
         </View>
         <TouchableOpacity style={styles.repairButton}>
           <Text style={styles.repairButtonText}>
-            Починить за 50 золота
+            Посмотреть рекламу за энергию?
           </Text>
         </TouchableOpacity>
       </ModalWithPadding>
@@ -397,6 +392,11 @@ export default function GameScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
   topBar: {
     flexDirection: "row",
@@ -445,10 +445,6 @@ const styles = StyleSheet.create({
   bossImage: {
     width: SCREEN_WIDTH * 0.75,
     height: SCREEN_HEIGHT * 0.35,
-  },
-  bossDead: {
-    opacity: 0.5,
-    tintColor: "#ff0000",
   },
   bossName: {
     color: "#fff",
