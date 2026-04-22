@@ -1,22 +1,18 @@
 ROLES = {
-    "warrior": {
-        "name": "Воин",
-        "description": "Стабильный урон",
-        "damage_multiplier": 1.0,
+    "athlete": {
+        "name": "Атлет",
+        "description": "Активность и спорт",
     },
-    "berserk": {
-        "name": "Берсерк",
-        "description": "Повышенный урон",
-        "damage_multiplier": 1.2,
+    "gourmet": {
+        "name": "Гурман",
+        "description": "Еда и кухни мира",
     },
-    "tank": {
-        "name": "Танк",
-        "description": "Низкий, но устойчивый урон",
-        "damage_multiplier": 0.8,
+    "stylist": {
+        "name": "Стилист",
+        "description": "Мода и образы",
     },
-    "assassin": {
-        "name": "Ассасин",
-        "description": "Быстрый и сильный удар",
-        "damage_multiplier": 1.4,
+    "traveler": {
+        "name": "Путешественник",
+        "description": "Города и маршруты",
     },
 }

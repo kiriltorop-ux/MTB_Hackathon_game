@@ -1,12 +1,12 @@
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-from app.websocket.boss_manager import boss_connection_manager
-from app.core.click_limit import refresh_click_limit_if_needed
+from app.core.click_limit import refresh_click_limit_if_needed, refresh_daily_damage_boost
 from app.core.damage_formula import calculate_damage
 from app.database import async_session_maker
 from app.models.boss_state import BossState
 from app.models.user import User
+from app.websocket.boss_manager import boss_connection_manager
 
 
 class BattleService:
@@ -36,11 +36,12 @@ class BattleService:
                 raise ValueError("Global boss not found")
 
             refresh_click_limit_if_needed(player_state)
+            refresh_daily_damage_boost(player_state)
 
             if player_state.clicks_left <= 0:
-                raise ValueError("No clicks left for today")
+                raise ValueError("No clicks left")
 
-            damage, is_critical = calculate_damage(user.role)
+            damage, is_critical = calculate_damage(player_state)
 
             player_state.clicks_left -= 1
             player_state.total_damage += damage
@@ -50,6 +51,7 @@ class BattleService:
                 boss_state.current_hp = 0
 
             await session.commit()
+
             await boss_connection_manager.broadcast(
                 {
                     "type": "boss_update",
