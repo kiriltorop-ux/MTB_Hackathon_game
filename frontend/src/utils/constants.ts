@@ -1,4 +1,3 @@
-// Только клиентские константы (UI, анимации)
 export const CLIENT_CONFIG = {
   ANIMATION: {
     HIT_SHAKE_DURATION: 40,
@@ -6,12 +5,6 @@ export const CLIENT_CONFIG = {
     GLOW_DURATION: 50,
     DAMAGE_NUMBER_DURATION: 500,
     CRITICAL_TEXT_DURATION: 500,
-  },
-  UI: {
-    DEFAULT_BOSS_IMAGE: require("../../assets/images/boss.jpg"),
-    LEFT_PANEL_TOP_OFFSET: 0.4, // 40% от высоты экрана
-    BOSS_IMAGE_WIDTH: 0.75,
-    BOSS_IMAGE_HEIGHT: 0.35,
   },
 } as const;
 

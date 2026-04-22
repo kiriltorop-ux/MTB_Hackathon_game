@@ -9,8 +9,8 @@ import {
   Pressable,
   useWindowDimensions,
 } from "react-native";
-import { Image as ExpoImage } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { BrandLogo } from "@/src/components/BrandLogo";
 
 export default function LoginScreen() {
   const { width, height } = useWindowDimensions();
@@ -33,7 +33,7 @@ export default function LoginScreen() {
             colors={["#141318", "transparent"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 0, y: 1 }}
-            style={[StyleSheet.absoluteFill, { height: height * 0.6 }]}
+            style={[StyleSheet.absoluteFill, { height: height * 0.5 }]}
           />
 
           {/* Второй градиент (нижний тёмный) - ограничиваем высоту */}
@@ -43,22 +43,21 @@ export default function LoginScreen() {
             end={{ x: 0, y: 1 }}
             style={[
               StyleSheet.absoluteFill,
-              { top: height * 0.7, height: height * 0.4 },
+              { top: height * 0.5, height: height * 0.8 },
             ]}
           />
 
           <View style={[styles.heroContent, { marginTop: heroTopOffset }]}>
-            <ExpoImage
-              source={require("../assets/icons/logo.svg")}
-              contentFit="contain"
+            <View
               style={[
                 styles.logo,
                 {
-                  width: Math.min(width - sidePadding * 2, 330),
                   height: Math.max(40, 51 * scale),
                 },
               ]}
-            />
+            >
+              <BrandLogo size={42 * scale} minSize={67} />
+            </View>
             <Text
               style={[styles.subtitle, { fontSize: Math.max(16, 20 * scale) }]}
             >

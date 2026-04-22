@@ -3,7 +3,6 @@ import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import {
   ActivityIndicator,
-  Image,
   ImageBackground,
   Pressable,
   StyleSheet,
@@ -12,11 +11,11 @@ import {
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Image as ExpoImage } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useBoss } from "../src/hooks/useBoss";
 import { useUser } from "../src/hooks/useUser";
 import { DamageNumber } from "../src/components/DamageNumber";
+import { BrandLogo } from "../src/components/BrandLogo";
 
 export default function MainScreen() {
   const insets = useSafeAreaInsets();
@@ -44,8 +43,6 @@ export default function MainScreen() {
     maxHpValue > 0 ? Math.max(0, Math.min(1, currentHpValue / maxHpValue)) : 0;
 
   useEffect(() => {
-    // Keep last valid HP values to avoid bar flicker/disappear
-    // during short-lived backend/ws partial updates.
     if (maxHpValue > 0) {
       setDisplayHp({
         current: Math.max(0, currentHpValue),
@@ -76,11 +73,7 @@ export default function MainScreen() {
         />
 
         <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
-          <ExpoImage
-            source={require("../assets/icons/logo.svg")}
-            style={styles.logo}
-            contentFit="contain"
-          />
+          <BrandLogo size={22} minSize={22} style={styles.logo} />
           <View style={styles.headerRow}>
             <Pressable onPress={() => router.back()} style={styles.iconBtn}>
               <Ionicons name="close" size={24} color="#fff" />
@@ -131,11 +124,6 @@ export default function MainScreen() {
           ) : (
             <TouchableWithoutFeedback onPressIn={onBossHit}>
               <View style={styles.bossHitArea}>
-                <Image
-                  source={require("../assets/images/boss.jpg")}
-                  style={styles.boss}
-                  resizeMode="contain"
-                />
                 {lastDamage && (
                   <DamageNumber
                     value={lastDamage.value}
@@ -185,7 +173,7 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: "#12110c" },
   bg: { flex: 1 },
   header: { paddingHorizontal: 14 },
-  logo: { width: 132, height: 22, marginBottom: 8 },
+  logo: { fontSize: 22, lineHeight: 22, marginBottom: 8 },
   headerRow: { flexDirection: "row", alignItems: "center" },
   iconBtn: {
     width: 44,
