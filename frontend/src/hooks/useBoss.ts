@@ -40,10 +40,22 @@ export const useBoss = (telegramId: number) => {
 
       try {
         const result = await api.tapBoss(telegramId);
+        const damageValue =
+          typeof (result as any).damage_dealt === "number"
+            ? (result as any).damage_dealt
+            : typeof (result as any).damage === "number"
+              ? (result as any).damage
+              : 0;
+        const nextBossHp =
+          typeof (result as any).boss_hp_remaining === "number"
+            ? (result as any).boss_hp_remaining
+            : typeof (result as any).boss_current_hp === "number"
+              ? (result as any).boss_current_hp
+              : null;
 
         // Показываем цифру урона в месте касания
         setLastDamage({
-          value: result.damage_dealt,
+          value: damageValue,
           isCritical: result.is_critical,
           x,
           y,
@@ -57,7 +69,8 @@ export const useBoss = (telegramId: number) => {
           prev
             ? {
                 ...prev,
-                currentHp: result.boss_hp_remaining,
+                currentHp:
+                  typeof nextBossHp === "number" ? nextBossHp : prev.currentHp,
               }
             : null,
         );

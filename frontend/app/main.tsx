@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import {
@@ -20,13 +21,38 @@ import { DamageNumber } from "../src/components/DamageNumber";
 export default function MainScreen() {
   const insets = useSafeAreaInsets();
   const telegramId = 1;
-  const { boss, loading: bossLoading, hit, lastDamage, isHitting } = useBoss(telegramId);
+  const {
+    boss,
+    loading: bossLoading,
+    hit,
+    lastDamage,
+    isHitting,
+  } = useBoss(telegramId);
   const { loading: userLoading, refreshUser } = useUser(telegramId);
 
-  const hpRatio =
-    boss && boss.maxHp > 0
-      ? Math.max(0, Math.min(1, boss.currentHp / boss.maxHp))
+  const [displayHp, setDisplayHp] = useState({ current: 0, max: 0 });
+
+  const currentHpValue =
+    typeof boss?.currentHp === "number" && Number.isFinite(boss.currentHp)
+      ? boss.currentHp
       : 0;
+  const maxHpValue =
+    typeof boss?.maxHp === "number" && Number.isFinite(boss.maxHp)
+      ? boss.maxHp
+      : 0;
+  const hpRatio =
+    maxHpValue > 0 ? Math.max(0, Math.min(1, currentHpValue / maxHpValue)) : 0;
+
+  useEffect(() => {
+    // Keep last valid HP values to avoid bar flicker/disappear
+    // during short-lived backend/ws partial updates.
+    if (maxHpValue > 0) {
+      setDisplayHp({
+        current: Math.max(0, currentHpValue),
+        max: maxHpValue,
+      });
+    }
+  }, [currentHpValue, maxHpValue]);
 
   const onBossHit = async (event: any) => {
     if (bossLoading || isHitting) return;
@@ -50,7 +76,11 @@ export default function MainScreen() {
         />
 
         <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
-          <ExpoImage source={require("../assets/icons/logo.svg")} style={styles.logo} contentFit="contain" />
+          <ExpoImage
+            source={require("../assets/icons/logo.svg")}
+            style={styles.logo}
+            contentFit="contain"
+          />
           <View style={styles.headerRow}>
             <Pressable onPress={() => router.back()} style={styles.iconBtn}>
               <Ionicons name="close" size={24} color="#fff" />
@@ -67,15 +97,30 @@ export default function MainScreen() {
           <View style={styles.hpTrack}>
             <LinearGradient
               colors={["#EC3753", "#4A41CA", "#619999"]}
-              style={[styles.hpFill, { width: `${Math.round(hpRatio * 100)}%` }]}
+              style={[
+                styles.hpFill,
+                {
+                  width: `${Math.round(
+                    (displayHp.max > 0
+                      ? Math.max(
+                          0,
+                          Math.min(1, displayHp.current / displayHp.max),
+                        )
+                      : hpRatio) * 100,
+                  )}%`,
+                },
+              ]}
             />
           </View>
           <View style={styles.hpTexts}>
             <Text style={styles.hpText}>{boss?.name ?? "Леший"}</Text>
             <Text style={styles.hpText}>
-              {boss
-                ? `${boss.currentHp.toLocaleString("ru-RU")} / ${boss.maxHp.toLocaleString("ru-RU")}`
-                : "0 / 0"}
+              {`${(displayHp.max > 0
+                ? displayHp.current
+                : currentHpValue
+              ).toLocaleString("ru-RU")} / ${(
+                displayHp.max || maxHpValue
+              ).toLocaleString("ru-RU")}`}
             </Text>
           </View>
         </View>
@@ -105,7 +150,10 @@ export default function MainScreen() {
         </View>
 
         <View style={[styles.bottomNav, { paddingBottom: insets.bottom + 6 }]}>
-          <Pressable style={styles.navItem} onPress={() => router.push("/leaderboard")}>
+          <Pressable
+            style={styles.navItem}
+            onPress={() => router.push("/leaderboard")}
+          >
             <Text style={styles.navEmoji}>🌰</Text>
             <Text style={styles.navText}>Топ</Text>
           </Pressable>
@@ -113,11 +161,17 @@ export default function MainScreen() {
             <Text style={styles.navEmoji}>⚔️</Text>
             <Text style={styles.navText}>Баттл</Text>
           </Pressable>
-          <Pressable style={styles.navItem} onPress={() => router.push("/rewards")}>
+          <Pressable
+            style={styles.navItem}
+            onPress={() => router.push("/rewards")}
+          >
             <Text style={styles.navEmoji}>🏆</Text>
             <Text style={styles.navText}>Задания</Text>
           </Pressable>
-          <Pressable style={styles.navItem} onPress={() => router.push("/leaderboard")}>
+          <Pressable
+            style={styles.navItem}
+            onPress={() => router.push("/leaderboard")}
+          >
             <Text style={styles.navEmoji}>🧭</Text>
             <Text style={styles.navText}>Друзья</Text>
           </Pressable>
@@ -133,13 +187,35 @@ const styles = StyleSheet.create({
   header: { paddingHorizontal: 14 },
   logo: { width: 132, height: 22, marginBottom: 8 },
   headerRow: { flexDirection: "row", alignItems: "center" },
-  iconBtn: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
-  headerTitle: { flex: 1, textAlign: "center", color: "#fff", fontSize: 33 / 1.6, fontFamily: "PPNeueMachina-Regular" },
+  iconBtn: {
+    width: 44,
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  headerTitle: {
+    flex: 1,
+    textAlign: "center",
+    color: "#fff",
+    fontSize: 33 / 1.6,
+    fontFamily: "PPNeueMachina-Regular",
+  },
   iconRow: { flexDirection: "row", gap: 12, width: 56 },
   hpWrap: { marginTop: 14, paddingHorizontal: 16 },
-  hpTrack: { height: 16, borderWidth: 1, borderColor: "rgba(92,137,162,0.86)", borderRadius: 12, overflow: "hidden", backgroundColor: "rgba(0,0,0,0.2)" },
+  hpTrack: {
+    height: 16,
+    borderWidth: 1,
+    borderColor: "rgba(92,137,162,0.86)",
+    borderRadius: 12,
+    overflow: "hidden",
+    backgroundColor: "rgba(0,0,0,0.2)",
+  },
   hpFill: { width: "82%", height: "100%" },
-  hpTexts: { flexDirection: "row", justifyContent: "space-between", marginTop: 4 },
+  hpTexts: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 4,
+  },
   hpText: { color: "#fff", fontFamily: "PPNeueMachina-Regular", fontSize: 16 },
   bossWrap: { flex: 1, alignItems: "center", justifyContent: "center" },
   bossHitArea: {
@@ -149,8 +225,25 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   boss: { width: "92%", height: "72%" },
-  bottomNav: { borderTopLeftRadius: 16, borderTopRightRadius: 16, backgroundColor: "#18171c", flexDirection: "row", justifyContent: "space-around", alignItems: "center", paddingTop: 8 },
-  navItem: { alignItems: "center", justifyContent: "center", width: 74, height: 66 },
+  bottomNav: {
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    backgroundColor: "#18171c",
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+    paddingTop: 8,
+  },
+  navItem: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: 74,
+    height: 66,
+  },
   navEmoji: { fontSize: 30 / 1.1 },
-  navText: { color: "#CCE0FF", fontFamily: "PPNeueMachina-Regular", fontSize: 15 },
+  navText: {
+    color: "#CCE0FF",
+    fontFamily: "PPNeueMachina-Regular",
+    fontSize: 15,
+  },
 });
