@@ -31,19 +31,14 @@ import { useBoss } from "../src/hooks/useBoss";
 import { CLIENT_CONFIG } from "../src/utils/constants";
 import { useTheme } from "../src/context/ThemeContext";
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } =
-  Dimensions.get("window");
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export default function GameScreen() {
-  const { theme, isDark, toggleTheme } = useTheme();
+  const { theme } = useTheme();
 
   const telegramId = 1;
 
-  const {
-    user,
-    loading: userLoading,
-    refreshUser,
-  } = useUser(telegramId);
+  const { user, loading: userLoading, refreshUser } = useUser(telegramId);
   const {
     boss,
     loading: bossLoading,
@@ -109,10 +104,7 @@ export default function GameScreen() {
   };
 
   const bossAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: bossShake.value },
-      { scale: bossScale.value },
-    ],
+    transform: [{ translateX: bossShake.value }, { scale: bossScale.value }],
   }));
 
   const bossGlowStyle = useAnimatedStyle(() => ({
@@ -121,19 +113,9 @@ export default function GameScreen() {
     shadowColor: "#ff4444",
   }));
 
-  const ModalWithPadding = ({
-    visible,
-    onClose,
-    title,
-    children,
-  }: any) => (
+  const ModalWithPadding = ({ visible, onClose, title, children }: any) => (
     <Modal visible={visible} animationType="slide" transparent>
-      <View
-        style={[
-          styles.modalOverlay,
-          { backgroundColor: theme.overlay },
-        ]}
-      >
+      <View style={[styles.modalOverlay, { backgroundColor: theme.overlay }]}>
         <View
           style={[
             styles.modalContent,
@@ -146,10 +128,7 @@ export default function GameScreen() {
           <Text style={[styles.modalTitle, { color: theme.tint }]}>
             {title}
           </Text>
-          <TouchableOpacity
-            style={styles.modalClose}
-            onPress={onClose}
-          >
+          <TouchableOpacity style={styles.modalClose} onPress={onClose}>
             <Ionicons name="close" size={24} color={theme.text} />
           </TouchableOpacity>
           <ScrollView
@@ -166,12 +145,7 @@ export default function GameScreen() {
 
   if (userLoading || bossLoading) {
     return (
-      <LinearGradient
-        colors={
-          isDark ? ["#1a1a2e", "#16213e"] : ["#f0f0f0", "#e0e0e0"]
-        }
-        style={styles.container}
-      >
+      <LinearGradient colors={["#f0f0f0", "#e0e0e0"]} style={styles.container}>
         <ActivityIndicator size="large" color={theme.tint} />
         <Text style={[styles.loadingText, { color: theme.text }]}>
           Загрузка...
@@ -181,26 +155,13 @@ export default function GameScreen() {
   }
 
   return (
-    <LinearGradient
-      colors={
-        isDark ? ["#1a1a2e", "#16213e"] : ["#f5f5f5", "#e8e8e8"]
-      }
-      style={styles.container}
-    >
-      <StatusBar
-        barStyle={isDark ? "light-content" : "dark-content"}
-      />
+    <LinearGradient colors={["#f5f5f5", "#e8e8e8"]} style={styles.container}>
+      <StatusBar barStyle="dark-content" />
 
       {/* ===== ВЕРХНЯЯ ПАНЕЛЬ ===== */}
-      <SafeAreaView
-        style={styles.topBar}
-        edges={["top", "left", "right"]}
-      >
+      <SafeAreaView style={styles.topBar} edges={["top", "left", "right"]}>
         <TouchableOpacity
-          style={[
-            styles.iconButton,
-            { backgroundColor: theme.iconBg },
-          ]}
+          style={[styles.iconButton, { backgroundColor: theme.iconBg }]}
           onPress={() => router.back()}
         >
           <Ionicons name="close" size={28} color={theme.text} />
@@ -212,10 +173,7 @@ export default function GameScreen() {
         />
 
         <TouchableOpacity
-          style={[
-            styles.iconButton,
-            { backgroundColor: theme.iconBg },
-          ]}
+          style={[styles.iconButton, { backgroundColor: theme.iconBg }]}
           onPress={() => setShowMenu(true)}
         >
           <Ionicons name="menu" size={28} color={theme.text} />
@@ -227,10 +185,7 @@ export default function GameScreen() {
         {/* Левая панель */}
         <View style={styles.leftPanel}>
           <TouchableOpacity
-            style={[
-              styles.sideButton,
-              { backgroundColor: theme.sideButtonBg },
-            ]}
+            style={[styles.sideButton, { backgroundColor: theme.sideButtonBg }]}
             onPress={() => setShowShop(true)}
           >
             <Ionicons name="storefront" size={28} color="#ffd700" />
@@ -238,10 +193,7 @@ export default function GameScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[
-              styles.sideButton,
-              { backgroundColor: theme.sideButtonBg },
-            ]}
+            style={[styles.sideButton, { backgroundColor: theme.sideButtonBg }]}
             onPress={() => setShowClan(true)}
           >
             <Ionicons name="people" size={28} color="#ffd700" />
@@ -249,10 +201,7 @@ export default function GameScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[
-              styles.sideButton,
-              { backgroundColor: theme.sideButtonBg },
-            ]}
+            style={[styles.sideButton, { backgroundColor: theme.sideButtonBg }]}
             onPress={() => setShowWeapons(true)}
           >
             <Ionicons name="hammer" size={28} color="#ffd700" />
@@ -263,11 +212,7 @@ export default function GameScreen() {
         {/* Босс */}
         <TouchableWithoutFeedback onPress={onBossHit}>
           <Animated.View
-            style={[
-              styles.bossContainer,
-              bossAnimatedStyle,
-              bossGlowStyle,
-            ]}
+            style={[styles.bossContainer, bossAnimatedStyle, bossGlowStyle]}
           >
             <Image
               source={CLIENT_CONFIG.UI.DEFAULT_BOSS_IMAGE}
@@ -276,17 +221,9 @@ export default function GameScreen() {
               accessibilityLabel="Босс игры — нажми для удара"
             />
             <Text style={[styles.bossName, { color: theme.text }]}>
-              <MaterialIcons
-                name="girl"
-                size={16}
-                color={theme.text}
-              />
+              <MaterialIcons name="girl" size={16} color={theme.text} />
               {boss?.name ?? "Босс"}
-              <MaterialIcons
-                name="girl"
-                size={16}
-                color={theme.text}
-              />
+              <MaterialIcons name="girl" size={16} color={theme.text} />
             </Text>
 
             {lastDamage && (
@@ -315,24 +252,12 @@ export default function GameScreen() {
             />
           </View>
           {/* Кнопка переключения темы */}
-          <TouchableOpacity
-            onPress={toggleTheme}
-            style={styles.themeButton}
-          >
-            <Ionicons
-              name={isDark ? "sunny" : "moon"}
-              size={24}
-              color={theme.text}
-            />
+          <TouchableOpacity style={styles.themeButton}>
+            <Ionicons name="moon" size={24} color={theme.text} />
           </TouchableOpacity>
         </View>
 
-        <View
-          style={[
-            styles.statsBar,
-            { backgroundColor: theme.statsBarBg },
-          ]}
-        >
+        <View style={[styles.statsBar, { backgroundColor: theme.statsBarBg }]}>
           <View style={styles.statItem}>
             <Ionicons name="cash" size={20} color="#ffd700" />
             <Text style={[styles.statText, { color: theme.text }]}>
@@ -390,24 +315,14 @@ export default function GameScreen() {
           Создайте или вступите в клан для бонусов!
         </Text>
         <View
-          style={[
-            styles.clanBonus,
-            { backgroundColor: theme.clanBonusBg },
-          ]}
+          style={[styles.clanBonus, { backgroundColor: theme.clanBonusBg }]}
         >
-          <Text style={styles.clanBonusText}>
-            ✨ Бонус клана: +15% к урону
-          </Text>
+          <Text style={styles.clanBonusText}>✨ Бонус клана: +15% к урону</Text>
         </View>
         <TouchableOpacity
-          style={[
-            styles.createClanButton,
-            { backgroundColor: theme.buttonBg },
-          ]}
+          style={[styles.createClanButton, { backgroundColor: theme.buttonBg }]}
         >
-          <Text style={styles.createClanButtonText}>
-            ➕ Создать клан
-          </Text>
+          <Text style={styles.createClanButtonText}>➕ Создать клан</Text>
         </TouchableOpacity>
       </ModalWithPadding>
 
@@ -426,10 +341,7 @@ export default function GameScreen() {
           </Text>
         </View>
         <TouchableOpacity
-          style={[
-            styles.repairButton,
-            { backgroundColor: theme.tint },
-          ]}
+          style={[styles.repairButton, { backgroundColor: theme.tint }]}
         >
           <Text style={styles.repairButtonText}>
             Посмотреть рекламу за энергию?
@@ -443,50 +355,35 @@ export default function GameScreen() {
         title="☰ Меню"
       >
         <TouchableOpacity
-          style={[
-            styles.menuItem,
-            { borderBottomColor: theme.border },
-          ]}
+          style={[styles.menuItem, { borderBottomColor: theme.border }]}
         >
           <Text style={[styles.menuItemText, { color: theme.text }]}>
             🏆 Рейтинг
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[
-            styles.menuItem,
-            { borderBottomColor: theme.border },
-          ]}
+          style={[styles.menuItem, { borderBottomColor: theme.border }]}
         >
           <Text style={[styles.menuItemText, { color: theme.text }]}>
             📊 Статистика
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[
-            styles.menuItem,
-            { borderBottomColor: theme.border },
-          ]}
+          style={[styles.menuItem, { borderBottomColor: theme.border }]}
         >
           <Text style={[styles.menuItemText, { color: theme.text }]}>
             ⚙️ Настройки
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[
-            styles.menuItem,
-            { borderBottomColor: theme.border },
-          ]}
+          style={[styles.menuItem, { borderBottomColor: theme.border }]}
         >
           <Text style={[styles.menuItemText, { color: theme.text }]}>
             ❓ Помощь
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[
-            styles.menuItem,
-            { borderBottomColor: theme.border },
-          ]}
+          style={[styles.menuItem, { borderBottomColor: theme.border }]}
         >
           <Text style={[styles.menuItemText, { color: theme.text }]}>
             🚪 Выйти из аккаунта

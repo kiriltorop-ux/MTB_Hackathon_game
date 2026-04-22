@@ -1,48 +1,29 @@
-import React, {
-  createContext,
-  useContext,
-  useState,
-  ReactNode,
-  useEffect,
-} from "react";
+import React, { createContext, useContext, ReactNode } from "react";
 import { Colors, createTextStyles, Fonts } from "../constants/theme";
 
 interface ThemeContextType {
-  theme: typeof Colors.light | typeof Colors.dark;
+  theme: typeof Colors;
   textStyles: ReturnType<typeof createTextStyles>;
   fontLight: { fontFamily: string };
   fontRegular: { fontFamily: string };
   fontBold: { fontFamily: string };
-  isDark: boolean;
-  toggleTheme: () => void;
+  fontSemiBold: { fontFamily: string };
+  fontExtraBold: { fontFamily: string };
 }
 
 const ThemeContext = createContext<ThemeContextType>({
-  theme: Colors.dark,
-  textStyles: createTextStyles(true),
+  theme: Colors,
+  textStyles: createTextStyles(),
   fontLight: { fontFamily: "PPNeueMachina-Light" },
   fontRegular: { fontFamily: "PPNeueMachina-Regular" },
   fontBold: { fontFamily: "PPNeueMachina-Bold" },
-  isDark: true,
-  toggleTheme: () => {},
+  fontSemiBold: { fontFamily: "PPNeueMachina-Regular" },
+  fontExtraBold: { fontFamily: "PPNeueMachina-Bold" },
 });
 
-export const ThemeProvider = ({
-  children,
-}: {
-  children: ReactNode;
-}) => {
-  const [isDark, setIsDark] = useState(true); // По умолчанию тёмная тема
-
-  // Можно загружать сохранённую тему из AsyncStorage
-  useEffect(() => {
-    // TODO: загрузить сохранённую тему
-  }, []);
-
-  const toggleTheme = () => setIsDark(!isDark);
-
-  const theme = isDark ? Colors.dark : Colors.light;
-  const textStyles = createTextStyles(isDark);
+export const ThemeProvider = ({ children }: { children: ReactNode }) => {
+  const theme = Colors;
+  const textStyles = createTextStyles();
 
   return (
     <ThemeContext.Provider
@@ -52,8 +33,8 @@ export const ThemeProvider = ({
         fontLight: Fonts.light,
         fontRegular: Fonts.regular,
         fontBold: Fonts.bold,
-        isDark,
-        toggleTheme,
+        fontSemiBold: Fonts.semiBold,
+        fontExtraBold: Fonts.extraBold,
       }}
     >
       {children}
