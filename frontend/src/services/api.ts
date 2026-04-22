@@ -8,7 +8,7 @@ import { BattleResponse } from "../types/battle";
 import { LeaderboardItem } from "../types/leaderboard";
 
 const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_URL || "http://192.168.100.12:8000";
+  process.env.EXPO_PUBLIC_API_URL || "http://localhost:8000";
 
 class ApiService {
   private async request<T>(

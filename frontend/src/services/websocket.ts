@@ -1,7 +1,7 @@
 import { BossWebSocketMessage } from "../types/boss";
 
 const WS_BASE_URL =
-  process.env.EXPO_PUBLIC_WS_URL || "ws://http://192.168.100.12:8000";
+  process.env.EXPO_PUBLIC_WS_URL || "ws://http://localhost:8000";
 
 type WebSocketEventCallback<T = any> = (data: T) => void;
 

@@ -25,7 +25,6 @@ import Animated, {
 
 import { BossHealthBar } from "../src/components/BossHealthBar";
 import { XPBar } from "../src/components/XPBar";
-import { WeaponIntegrity } from "../src/components/WeaponIntegrity";
 import { DamageNumber } from "../src/components/DamageNumber";
 import { useUser } from "../src/hooks/useUser";
 import { useBoss } from "../src/hooks/useBoss";
@@ -35,7 +34,7 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } =
   Dimensions.get("window");
 
 export default function GameScreen() {
-  const telegramId = 123456789;
+  const telegramId = 1;
 
   const {
     user,
@@ -268,10 +267,6 @@ export default function GameScreen() {
               maxXp={100} // TODO: уточните у бэка максимальный XP для уровня
               level={user?.level ?? 1}
             />
-          </View>
-          <View style={styles.bottomRight}>
-            <WeaponIntegrity integrity={100} />{" "}
-            {/* TODO: добавить в API */}
           </View>
         </View>
 

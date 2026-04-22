@@ -1,11 +1,10 @@
 {
   "expo": {
-    "name": "todo",
-    "slug": "todo",
+    "name": "mtb_game",
+    "slug": "mtb_game",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "todo",
+    "scheme": "mtb_game",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -19,8 +18,7 @@
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "output": "static"
     },
     "plugins": [],
     "experiments": {
