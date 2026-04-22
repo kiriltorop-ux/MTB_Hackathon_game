@@ -49,7 +49,7 @@ export const Header: React.FC<HeaderProps> = ({
       ]}
     >
       <TouchableOpacity onPress={handleExit} style={styles.iconButton}>
-        <Ionicons name="close" size={24} color={theme.text} />
+        <Ionicons name="close" size={24} color={theme.text} opacity={0.5} />
       </TouchableOpacity>
 
       <Text style={[styles.title, { color: theme.text }]} numberOfLines={1}>
@@ -61,6 +61,7 @@ export const Header: React.FC<HeaderProps> = ({
           name={isSoundOn ? "volume-high" : "volume-mute"}
           size={24}
           color={theme.text}
+          opacity={0.5}
         />
       </TouchableOpacity>
     </View>

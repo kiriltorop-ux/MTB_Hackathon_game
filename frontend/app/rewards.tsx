@@ -10,8 +10,8 @@ import {
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Image as ExpoImage } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { BrandLogo } from "@/src/components/BrandLogo";
 
 const rewards = Array.from({ length: 6 }).map((_, i) => ({
   id: i + 1,
@@ -35,7 +35,7 @@ export default function RewardsScreen() {
         />
 
         <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
-          <ExpoImage source={require("../assets/icons/logo.svg")} style={styles.logo} contentFit="contain" />
+          <BrandLogo size={22} minSize={22} style={styles.logo} />
           <View style={styles.headerRow}>
             <Pressable onPress={() => router.back()} style={styles.iconBtn}>
               <Ionicons name="close" size={24} color="#fff" />
@@ -47,10 +47,17 @@ export default function RewardsScreen() {
           </View>
         </View>
 
-        <ScrollView contentContainerStyle={styles.grid} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          contentContainerStyle={styles.grid}
+          showsVerticalScrollIndicator={false}
+        >
           {rewards.map((item) => (
             <View key={item.id} style={styles.card}>
-              <Image source={require("../assets/images/class-athlete.png")} style={styles.trophy} resizeMode="contain" />
+              <Image
+                source={require("../assets/images/class-athlete.png")}
+                style={styles.trophy}
+                resizeMode="contain"
+              />
               <Text style={styles.cardTitle}>{item.title}</Text>
               <View style={styles.progressTrack}>
                 <LinearGradient
@@ -73,15 +80,55 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: "#12110c" },
   bg: { flex: 1 },
   header: { paddingHorizontal: 14 },
-  logo: { width: 132, height: 22, marginBottom: 8 },
+  logo: { fontSize: 22, lineHeight: 22, marginBottom: 8 },
   headerRow: { flexDirection: "row", alignItems: "center" },
-  iconBtn: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
-  headerTitle: { flex: 1, textAlign: "center", color: "#fff", fontSize: 33 / 1.6, fontFamily: "PPNeueMachina-Regular" },
-  grid: { paddingHorizontal: 12, paddingTop: 10, paddingBottom: 24, flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", rowGap: 14 },
-  card: { width: "48.5%", borderRadius: 16, backgroundColor: "#181A33", padding: 12 },
+  iconBtn: {
+    width: 44,
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  headerTitle: {
+    flex: 1,
+    textAlign: "center",
+    color: "#fff",
+    fontSize: 33 / 1.6,
+    fontFamily: "PPNeueMachina-Regular",
+  },
+  grid: {
+    paddingHorizontal: 12,
+    paddingTop: 10,
+    paddingBottom: 24,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    rowGap: 14,
+  },
+  card: {
+    width: "48.5%",
+    borderRadius: 16,
+    backgroundColor: "#181A33",
+    padding: 12,
+  },
   trophy: { width: "100%", height: 110, marginTop: -16, marginBottom: -8 },
-  cardTitle: { color: "#fff", fontSize: 36 / 1.6, fontFamily: "PPNeueMachina-Bold" },
-  progressTrack: { height: 3, backgroundColor: "#000", borderRadius: 10, marginTop: 4, overflow: "hidden", marginBottom: 8 },
+  cardTitle: {
+    color: "#fff",
+    fontSize: 36 / 1.6,
+    fontFamily: "PPNeueMachina-Bold",
+  },
+  progressTrack: {
+    height: 3,
+    backgroundColor: "#000",
+    borderRadius: 10,
+    marginTop: 4,
+    overflow: "hidden",
+    marginBottom: 8,
+  },
   progressFill: { height: "100%", width: "72%" },
-  cardText: { color: "#DDE6F8", fontFamily: "PPNeueMachina-Regular", fontSize: 15, lineHeight: 24 / 1.2 },
+  cardText: {
+    color: "#DDE6F8",
+    fontFamily: "PPNeueMachina-Regular",
+    fontSize: 15,
+    lineHeight: 24 / 1.2,
+  },
 });

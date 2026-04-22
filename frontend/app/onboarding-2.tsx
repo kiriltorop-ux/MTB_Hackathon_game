@@ -29,19 +29,23 @@ export default function OnboardingSecondScreen() {
         resizeMode="cover"
         style={styles.background}
       >
+        {/* Первый градиент (верхний тёмный) - ограничиваем высоту */}
         <LinearGradient
-          colors={["#141318", "rgba(20, 19, 24, 0)"]}
-          locations={[0.050898, 0.17864]}
-          start={{ x: 0.5, y: 0 }}
-          end={{ x: 0.5, y: 1 }}
-          style={StyleSheet.absoluteFill}
+          colors={["#141318", "transparent"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={[StyleSheet.absoluteFill, { height: height * 0.5 }]}
         />
+
+        {/* Второй градиент (нижний тёмный) - ограничиваем высоту */}
         <LinearGradient
-          colors={["#141318", "rgba(20, 19, 24, 0)"]}
-          locations={[0.15475, 0.48995]}
-          start={{ x: 0.5, y: 1 }}
-          end={{ x: 0.5, y: 0 }}
-          style={StyleSheet.absoluteFill}
+          colors={["transparent", "#141318"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={[
+            StyleSheet.absoluteFill,
+            { top: height * 0.5, height: height * 0.8 },
+          ]}
         />
 
         <View

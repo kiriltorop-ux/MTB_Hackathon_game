@@ -2,21 +2,18 @@ import { useMemo, useState } from "react";
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import {
-  BackHandler,
   Image,
   ImageBackground,
-  Platform,
   Pressable,
   StyleSheet,
   Text,
   View,
   useWindowDimensions,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { Image as ExpoImage } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ScreenWrapper } from "@/src/components/ScreenWrapper";
 import { OnboardingActions } from "@/src/components/OnboardingActions";
+import { BrandLogo } from "@/src/components/BrandLogo";
 import { useTheme } from "@/src/context/ThemeContext";
 
 type ClassId = "tech" | "athlete" | "traveler" | "gourmet";
@@ -59,9 +56,8 @@ const CLASSES: {
 ];
 
 export default function ClassSelectScreen() {
-  const { fontRegular, theme } = useTheme();
+  const { fontRegular } = useTheme();
   const [selectedClass, setSelectedClass] = useState<ClassId | null>(null);
-  const [isSoundOn, setIsSoundOn] = useState(true);
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
 
@@ -90,19 +86,8 @@ export default function ClassSelectScreen() {
     };
   }, [insets.bottom, insets.top, width]);
 
-  const handleExit = () => {
-    if (Platform.OS === "android") {
-      BackHandler.exitApp();
-      return;
-    }
-    router.back();
-  };
-
   return (
-    <ScreenWrapper
-      title=""
-      showHeader={false}
-    >
+    <ScreenWrapper title="Выберите Класс" showHeader hideHeaderBottomBorder>
       <ImageBackground
         source={require("../assets/images/class-select-bg.png")}
         style={styles.screen}
@@ -115,42 +100,14 @@ export default function ClassSelectScreen() {
 
         <View
           style={[
-            styles.customHeader,
-            { paddingTop: insets.top + 8, paddingHorizontal: metrics.horizontalPadding },
-          ]}
-        >
-          <ExpoImage
-            source={require("../assets/icons/logo.svg")}
-            style={styles.brandLogo}
-            contentFit="contain"
-          />
-          <View style={styles.headerControlsRow}>
-            <Pressable onPress={handleExit} style={styles.iconButton}>
-              <Ionicons name="close" size={24} color={theme.text} />
-            </Pressable>
-            <Text style={[styles.headerTitle, fontRegular]}>Выберите Класс</Text>
-            <Pressable
-              onPress={() => setIsSoundOn(!isSoundOn)}
-              style={styles.iconButton}
-            >
-              <Ionicons
-                name={isSoundOn ? "volume-high" : "volume-mute"}
-                size={24}
-                color={theme.text}
-              />
-            </Pressable>
-          </View>
-        </View>
-
-        <View
-          style={[
-            styles.brandRow,
+            styles.logoOverlay,
             {
+              paddingTop: insets.top + 8,
               paddingHorizontal: metrics.horizontalPadding,
-              marginTop: metrics.headerOffset,
             },
           ]}
         >
+          <BrandLogo size={24} minSize={24} style={styles.brandLogo} />
         </View>
 
         <View
@@ -158,6 +115,7 @@ export default function ClassSelectScreen() {
             styles.grid,
             {
               paddingHorizontal: metrics.horizontalPadding,
+              marginTop: metrics.headerOffset,
               columnGap: metrics.gap,
               rowGap: metrics.gap,
             },
@@ -239,7 +197,10 @@ export default function ClassSelectScreen() {
                     },
                   ]}
                 >
-                  <Text style={[styles.cardLabel, fontRegular]} numberOfLines={1}>
+                  <Text
+                    style={[styles.cardLabel, fontRegular]}
+                    numberOfLines={1}
+                  >
                     {item.label}
                   </Text>
                 </LinearGradient>
@@ -268,44 +229,22 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
   },
-  brandRow: {
-    marginTop: 6,
-  },
-  customHeader: {
+  logoOverlay: {
     position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     zIndex: 30,
-  },
-  headerControlsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 4,
-  },
-  iconButton: {
-    width: 44,
-    height: 44,
-    justifyContent: "center",
     alignItems: "center",
   },
   brandLogo: {
-    width: 150,
-    height: 24,
-    marginBottom: 6,
-  },
-  headerTitle: {
-    flex: 1,
-    textAlign: "center",
-    color: "#FFFFFF",
-    fontSize: 36 / 1.8,
+    fontSize: 24,
     lineHeight: 24,
+    marginBottom: 2,
   },
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    marginTop: 4,
   },
   card: {
     position: "relative",
