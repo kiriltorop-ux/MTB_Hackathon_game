@@ -26,12 +26,14 @@ class ApiService {
         ...options,
       });
 
+      const text = await response.text();
+      const data = text ? JSON.parse(text) : null;
+
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || `HTTP ${response.status}`);
+        throw new Error(data?.detail || text || `HTTP ${response.status}`);
       }
 
-      return await response.json();
+      return data as T;
     } catch (error) {
       console.error(`API Error ${endpoint}:`, error);
       throw error;
@@ -52,7 +54,7 @@ class ApiService {
 
   async setNickname(
     data: SetNicknameRequest,
-  ): Promise<{ nickname: string }> {
+  ): Promise<{ message: string; nickname: string }> {
     return this.request("/users/set-nickname", {
       method: "POST",
       body: JSON.stringify(data),
@@ -80,9 +82,7 @@ class ApiService {
   async getFriendsLeaderboard(
     telegramId: number,
   ): Promise<LeaderboardItem[]> {
-    return this.request(
-      `/leaderboard/friends?telegram_id=${telegramId}`,
-    );
+    return this.request(`/leaderboard/friends?telegram_id=${telegramId}`);
   }
 
   // ============ Друзья ============
@@ -105,7 +105,7 @@ class ApiService {
 
   // ============ Роли ============
   async getRoles(): Promise<
-    { id: number; name: string; description: string }[]
+    { name: string; description: string; id?: number; code?: string }[]
   > {
     return this.request("/roles");
   }
@@ -113,10 +113,165 @@ class ApiService {
   async selectRole(
     telegramId: number,
     role: string,
-  ): Promise<{ success: boolean; role: string }> {
+  ): Promise<{ success?: boolean; role: string; message?: string }> {
     return this.request("/roles/select", {
       method: "POST",
       body: JSON.stringify({ telegram_id: telegramId, role }),
+    });
+  }
+
+  // ============ Daily Quest ============
+  async getDailyQuest(telegramId: number): Promise<{
+    quest_type: string;
+    question?: string | null;
+    options?: string[] | null;
+    is_completed: boolean;
+  }> {
+    return this.request(`/daily-quest?telegram_id=${telegramId}`);
+  }
+
+  async completeAthleteQuest(telegramId: number): Promise<{
+    message: string;
+    is_completed: boolean;
+    damage_boost_active: boolean;
+  }> {
+    return this.request("/daily-quest/complete-athlete", {
+      method: "POST",
+      body: JSON.stringify({
+        telegram_id: telegramId,
+        photo_attached: true,
+      }),
+    });
+  }
+
+  async completeAnswerQuest(
+    telegramId: number,
+    answer: string,
+  ): Promise<{
+    message: string;
+    is_completed: boolean;
+    damage_boost_active: boolean;
+  }> {
+    return this.request("/daily-quest/complete-answer", {
+      method: "POST",
+      body: JSON.stringify({
+        telegram_id: telegramId,
+        answer,
+      }),
+    });
+  }
+
+  // ============ Achievements ============
+  async getAchievements(telegramId: number): Promise<{
+    achievements: any[];
+    achievement_damage_bonus: number;
+    coins: number;
+  }> {
+    return this.request(`/achievements?telegram_id=${telegramId}`);
+  }
+
+  // ============ Мини-игры: random ============
+  async getRandomMiniGame(telegramId: number): Promise<any> {
+    return this.request("/mini-games/random", {
+      method: "POST",
+      body: JSON.stringify({ telegram_id: telegramId }),
+    });
+  }
+
+  // ============ Memory ============
+  async startMemoryGame(telegramId: number): Promise<any> {
+    return this.request("/mini-games/memory/start", {
+      method: "POST",
+      body: JSON.stringify({ telegram_id: telegramId }),
+    });
+  }
+
+  async flipMemoryCard(telegramId: number, index: number): Promise<any> {
+    return this.request("/mini-games/memory/flip", {
+      method: "POST",
+      body: JSON.stringify({ telegram_id: telegramId, index }),
+    });
+  }
+
+  // ============ Rhythm ============
+  async startRhythmGame(telegramId: number): Promise<any> {
+    return this.request("/mini-games/rhythm/start", {
+      method: "POST",
+      body: JSON.stringify({ telegram_id: telegramId }),
+    });
+  }
+
+  async finishRhythmGame(
+    telegramId: number,
+    hits: { note_index: number; hit_at_sec: number }[],
+  ): Promise<any> {
+    return this.request("/mini-games/rhythm/finish", {
+      method: "POST",
+      body: JSON.stringify({ telegram_id: telegramId, hits }),
+    });
+  }
+
+  // ============ Class mini-games ============
+  async startClassGame(telegramId: number): Promise<any> {
+    return this.request("/mini-games/class/start", {
+      method: "POST",
+      body: JSON.stringify({ telegram_id: telegramId }),
+    });
+  }
+
+  async finishAthleteGame(
+    telegramId: number,
+    selectedExercises: string[],
+  ): Promise<any> {
+    return this.request("/mini-games/class/finish-athlete", {
+      method: "POST",
+      body: JSON.stringify({
+        telegram_id: telegramId,
+        selected_exercises: selectedExercises,
+      }),
+    });
+  }
+
+  async finishGourmetGame(
+    telegramId: number,
+    distribution: Record<string, string>,
+  ): Promise<any> {
+    return this.request("/mini-games/class/finish-gourmet", {
+      method: "POST",
+      body: JSON.stringify({
+        telegram_id: telegramId,
+        distribution,
+      }),
+    });
+  }
+
+  async finishStylistGame(
+    telegramId: number,
+    assignments: Record<string, string>,
+    finishedInTime: boolean,
+  ): Promise<any> {
+    return this.request("/mini-games/class/finish-stylist", {
+      method: "POST",
+      body: JSON.stringify({
+        telegram_id: telegramId,
+        assignments,
+        finished_in_time: finishedInTime,
+      }),
+    });
+  }
+
+  async finishTravelerGame(
+    telegramId: number,
+    route: string[],
+    completedInSeconds: number,
+  ): Promise<any> {
+    return this.request("/mini-games/class/finish-traveler", {
+      method: "POST",
+      body: JSON.stringify({
+        telegram_id: telegramId,
+        route,
+        completed_in_seconds: completedInSeconds,
+      }),
     });
   }
 }

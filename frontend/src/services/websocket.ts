@@ -1,7 +1,7 @@
 import { BossWebSocketMessage } from "../types/boss";
 
 const WS_BASE_URL =
-  process.env.EXPO_PUBLIC_WS_URL || "ws://http://localhost:8000";
+  process.env.EXPO_PUBLIC_WS_URL || "ws://localhost:8000";
 
 type WebSocketEventCallback<T = any> = (data: T) => void;
 
@@ -33,13 +33,13 @@ class BossWebSocketService {
         try {
           const data = JSON.parse(event.data) as BossWebSocketMessage;
           this.notifyListeners(data.type, data);
-        } catch (e) {
-          // Невалидный JSON — игнорируем
+        } catch {
+          // ignore invalid json
         }
       };
 
       this.ws.onerror = () => {
-        // Ошибка логируется, но не крашит приложение
+        // ignore
       };
 
       this.ws.onclose = () => {
@@ -47,7 +47,7 @@ class BossWebSocketService {
         this.isConnecting = false;
         this.attemptReconnect();
       };
-    } catch (error) {
+    } catch {
       this.isConnecting = false;
       this.attemptReconnect();
     }
@@ -55,13 +55,10 @@ class BossWebSocketService {
 
   private attemptReconnect() {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
-      setTimeout(
-        () => {
-          this.reconnectAttempts++;
-          this.connect();
-        },
-        this.reconnectDelay * Math.pow(2, this.reconnectAttempts),
-      );
+      setTimeout(() => {
+        this.reconnectAttempts++;
+        this.connect();
+      }, this.reconnectDelay * Math.pow(2, this.reconnectAttempts));
     }
   }
 
@@ -80,8 +77,8 @@ class BossWebSocketService {
     this.listeners.get(eventType)?.forEach((callback) => {
       try {
         callback(data);
-      } catch (e) {
-        // Ошибка в колбэке не ломает остальные
+      } catch {
+        // ignore
       }
     });
   }
