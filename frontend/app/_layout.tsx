@@ -52,7 +52,6 @@ function ThemedLayout() {
       <Stack.Screen name="onboarding" options={{ headerShown: false }} />
       <Stack.Screen name="onboarding-2" options={{ headerShown: false }} />
       <Stack.Screen name="class-select" options={{ headerShown: false }} />
-      <Stack.Screen name="main" options={{ headerShown: false }} />
       <Stack.Screen name="leaderboard" options={{ headerShown: false }} />
       <Stack.Screen name="rewards" options={{ headerShown: false }} />
       <Stack.Screen name="index" options={{ headerShown: false }} />

@@ -6,6 +6,8 @@ export interface UserProfile {
   experience: number;
   gold: number;
   total_damage: number;
+  clicks_left: number;
+  daily_click_limit: number;
   role: string | null;
 }
 
