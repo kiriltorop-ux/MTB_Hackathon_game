@@ -6,3 +6,6 @@ from app.models.memory_game import MemoryGame
 from app.models.daily_quest import DailyQuest
 from app.models.rhythm_game import RhythmGame
 from app.models.class_game import ClassGame
+from app.models.achievement import Achievement
+from app.models.user_achievement import UserAchievement
+from app.models.daily_player_stats import DailyPlayerStats

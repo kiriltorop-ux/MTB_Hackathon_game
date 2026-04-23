@@ -7,6 +7,8 @@ class TapBossSchema(BaseModel):
 
 class BattleResponseSchema(BaseModel):
     damage: int
+    click_damage: int
+    achievement_damage_bonus: int
     is_critical: bool
     clicks_left: int
     total_damage: int
