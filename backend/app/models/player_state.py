@@ -28,4 +28,7 @@ class PlayerState(Base):
         nullable=True,
     )
 
+    achievement_damage_bonus: Mapped[int] = mapped_column(Integer, default=0)
+    coins: Mapped[int] = mapped_column(Integer, default=0)
+
     user = relationship("User", back_populates="player_state")

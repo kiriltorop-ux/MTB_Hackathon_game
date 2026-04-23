@@ -38,15 +38,22 @@ class BattleService:
             refresh_click_limit_if_needed(player_state)
             refresh_daily_damage_boost(player_state)
 
-            if player_state.clicks_left <= 0:
-                raise ValueError("No clicks left")
+            click_damage = 0
+            is_critical = False
 
-            damage, is_critical = calculate_damage(player_state)
+            if player_state.clicks_left > 0:
+                click_damage, is_critical = calculate_damage(player_state)
+                player_state.clicks_left -= 1
 
-            player_state.clicks_left -= 1
-            player_state.total_damage += damage
+            achievement_bonus = player_state.achievement_damage_bonus
+            total_hit_damage = click_damage + achievement_bonus
 
-            boss_state.current_hp -= damage
+            if total_hit_damage <= 0:
+                raise ValueError("No clicks and no passive damage")
+
+            player_state.total_damage += total_hit_damage
+
+            boss_state.current_hp -= total_hit_damage
             if boss_state.current_hp < 0:
                 boss_state.current_hp = 0
 
@@ -62,7 +69,9 @@ class BattleService:
             )
 
             return {
-                "damage": damage,
+                "damage": total_hit_damage,
+                "click_damage": click_damage,
+                "achievement_damage_bonus": achievement_bonus,
                 "is_critical": is_critical,
                 "clicks_left": player_state.clicks_left,
                 "total_damage": player_state.total_damage,

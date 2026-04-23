@@ -12,6 +12,7 @@ from app.routers.daily_quest import router as daily_quest_router
 from app.routers.rhythm_game import router as rhythm_game_router
 from app.routers.class_game import router as class_game_router
 from app.routers.mini_game import router as mini_game_router
+from app.routers.achievements import router as achievements_router
 
 app = FastAPI(title="MTB Game API")
 
@@ -34,6 +35,7 @@ app.include_router(daily_quest_router)
 app.include_router(rhythm_game_router)
 app.include_router(class_game_router)
 app.include_router(mini_game_router)
+app.include_router(achievements_router)
 
 
 @app.get("/")
