@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-from app.core.constants import DEFAULT_DAILY_CLICK_LIMIT
+from app.core.constants import MAX_CLICKS
 from app.database import async_session_maker
 from app.models.player_state import PlayerState
 from app.models.user import User
@@ -34,8 +34,8 @@ class UserService:
                 player_state = PlayerState(
                     user_id=user.id,
                     total_damage=0,
-                    daily_click_limit=DEFAULT_DAILY_CLICK_LIMIT,
-                    clicks_left=DEFAULT_DAILY_CLICK_LIMIT,
+                    daily_click_limit=MAX_CLICKS,
+                    clicks_left=MAX_CLICKS,
                 )
                 session.add(player_state)
                 await session.commit()

@@ -1,20 +1,14 @@
 import random
 
-from app.core.role_coefficients import ROLES
+from app.core.constants import BASE_DAMAGE, BOOSTED_DAMAGE
+from app.models.player_state import PlayerState
 
 
-def calculate_damage(role: str | None) -> tuple[int, bool]:
+def calculate_damage(player_state: PlayerState) -> tuple[int, bool]:
     if random.randint(1, 20) == 1:
         return 50, True
 
-    base_damage = 10
+    if player_state.daily_damage_boost_active:
+        return BOOSTED_DAMAGE, False
 
-    if role is None:
-        return base_damage, False
-
-    role_data = ROLES.get(role)
-    if role_data is None:
-        return base_damage, False
-
-    damage_multiplier = role_data["damage_multiplier"]
-    return int(base_damage * damage_multiplier), False
+    return BASE_DAMAGE, False
