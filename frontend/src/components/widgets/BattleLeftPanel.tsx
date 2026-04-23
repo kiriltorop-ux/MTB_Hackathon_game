@@ -123,7 +123,6 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 5,
     borderBottomLeftRadius: 5,
     backgroundColor: "rgba(74,65,202,0.5)",
-    backdropFilter: "blur(2px)",
   },
   energyIcon: {
     position: "absolute",
