@@ -33,6 +33,7 @@ export default function MainScreen() {
   } = useBoss(telegramId);
   const { user, loading: userLoading, refreshUser } = useUser(telegramId);
   const [isSoundOn, setIsSoundOn] = useState(true);
+  const [totalDamage, setTotalDamage] = useState(0);
 
   // Screen scale relative to Figma width (369).
   const u = width / FIGMA_W;
@@ -65,6 +66,7 @@ export default function MainScreen() {
     const result = await hit(locationX, locationY);
     if (result?.success) {
       refreshUser();
+      setTotalDamage(totalDamage + (result?.damage_dealt ?? 0));
     }
   };
 

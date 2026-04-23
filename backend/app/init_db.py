@@ -6,7 +6,6 @@ from app.core.constants import DEFAULT_BOSS_HP, DEFAULT_BOSS_NAME
 from app.database import Base, async_session_maker, engine
 from app.models import BossState
 
-
 async def init_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
